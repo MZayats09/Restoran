@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+  <h1 class="mb-1">Карта залу</h1>
+  <p style="color: var(--cream-dim);" class="mb-4">Обери дату й час — вільні столики зелені, зайняті на цей час — темні.</p>
+
+  <form method="get" class="d-flex gap-3 flex-wrap align-items-end mb-4">
+    <div>
+      <label class="form-label small">Дата</label>
+      <input type="date" name="date" value="{{ selected_date }}" min="{{ today }}" class="form-control" style="width:170px;" onchange="this.form.submit()">
+    </div>
+    <div>
+      <label class="form-label small">Час</label>
+      <select name="time" class="form-select" style="width:130px;" onchange="this.form.submit()">
+        {% for t in time_slots %}
+          <option value="{{ t }}" {% if t == selected_time %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="d-flex gap-3 pb-2" style="color: var(--cream-dim); font-size:.8rem;">
+      <span><span class="legend-dot" style="background: var(--olive);"></span>вільно</span>
+      <span><span class="legend-dot" style="background: var(--rust-deep);"></span>заброньовано</span>
+      <span><span class="legend-dot" style="background: var(--mustard);"></span>VIP</span>
+    </div>
+  </form>
+
+  <div class="floor-plan mb-3">
+    <div class="position-absolute top-0 start-50 translate-middle-x mt-2 rounded d-flex align-items-center justify-content-center" style="width:34%; height:34px; background: var(--ink); color: var(--cream-dim); font-size:.7rem;">Бар</div>
+    <div class="position-absolute bottom-0 start-0 m-2" style="color: var(--cream-dim); font-size:.7rem;">Вхід</div>
+
+    {% for table in tables %}
+      {% if table.booked %}
+        <div class="table-marker booked" style="left: {{ table.pos_x }}%; top: {{ table.pos_y }}%; width: {{ table.marker_size }}px; height: {{ table.marker_size }}px; border-radius: {% if table.seats > 4 %}12px{% else %}999px{% endif %};" title="Столик №{{ table.number }} зайнятий на цей час">
+          <span>{{ table.number }}</span><small>{{ table.seats }} міс.</small>
+        </div>
+      {% else %}
+        <div class="table-marker {% if table.is_vip %}vip{% endif %}" style="left: {{ table.pos_x }}%; top: {{ table.pos_y }}%; width: {{ table.marker_size }}px; height: {{ table.marker_size }}px; border-radius: {% if table.seats > 4 %}12px{% else %}999px{% endif %};" data-bs-toggle="modal" data-bs-target="#modal-{{ table.pk }}" title="Столик №{{ table.number }} · {{ table.seats }} місць">
+          <span>{{ table.number }}</span><small>{{ table.seats }} міс.</small>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+
+  {% if my_bookings %}
+  <h3 class="mt-5 mb-3">Мої бронювання</h3>
+  {% for b in my_bookings %}
+    <div class="card-panel p-3 mb-2 d-flex flex-row justify-content-between align-items-center">
+      <div style="font-size:.9rem;">
+        Столик №{{ b.table.number }} · {{ b.date }} о {{ b.time|time:"H:i" }} · {{ b.guests }} гостей
+        <div style="color: var(--cream-dim); font-size:.8rem;">{{ b.name }}, {{ b.phone }}</div>
+      </div>
+      <form method="post" action="{% url 'booking_cancel' b.pk %}">
+        {% csrf_token %}
+        <button class="btn btn-sm" style="color: var(--rust); background:none; border:none;">🗑</button>
+      </form>
+    </div>
+  {% endfor %}
+  {% endif %}
+</div>
+
+<!-- Booking modals -->
+{% for table in tables %}
+{% if not table.booked %}
+<div class="modal fade" id="modal-{{ table.pk }}" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background: var(--panel); color: var(--cream);">
+      <div class="modal-header" style="border-color: var(--panel-light);">
+        <h5 class="modal-title">Столик №{{ table.number }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="{% url 'booking_create' table.pk %}">
+        {% csrf_token %}
+        <div class="modal-body">
+          <p style="color: var(--cream-dim); font-size:.85rem;">До {{ table.seats }} гостей {% if table.is_vip %}· VIP-зона{% endif %}{% if table.is_terrace %}· тераса{% endif %}</p>
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <label class="form-label small">Дата</label>
+              <input type="date" name="date" value="{{ selected_date }}" min="{{ today }}" class="form-control" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label small">Час</label>
+              <select name="time" class="form-select" required>
+                {% for t in time_slots %}<option value="{{ t }}" {% if t == selected_time %}selected{% endif %}>{{ t }}</option>{% endfor %}
+              </select>
+            </div>
+          </div>
+          <label class="form-label small">Кількість гостей (макс. {{ table.seats }})</label>
+          <input type="number" name="guests" min="1" max="{{ table.seats }}" value="2" class="form-control mb-2" required>
+          <label class="form-label small">Ім’я</label>
+          <input type="text" name="name" value="{{ user.username|default:'' }}" class="form-control mb-2" required>
+          <label class="form-label small">Телефон</label>
+          <input type="text" name="phone" placeholder="+380..." class="form-control" required>
+        </div>
+        <div class="modal-footer" style="border-color: var(--panel-light);">
+          <button type="submit" class="btn btn-rust w-100">Забронювати столик</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endfor %}
+{% endblock %}

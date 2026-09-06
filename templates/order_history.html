@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4" style="max-width: 680px;">
+  <h1 class="mb-4">Мої замовлення</h1>
+
+  {% if not orders %}
+    <div class="text-center py-5">
+      <p style="color: var(--cream-dim);">Замовлень поки немає.</p>
+      <a href="{% url 'menu' %}" class="btn btn-rust px-4">Перейти до меню</a>
+    </div>
+  {% endif %}
+
+  {% for order in orders %}
+  <div class="card-panel p-3 mb-3">
+    <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+      <div>
+        <strong>Замовлення №{{ order.pk }}</strong>
+        <div style="color: var(--cream-dim); font-size:.8rem;">{{ order.created_at|date:"d.m.Y H:i" }} · {{ order.get_payment_method_display }}</div>
+      </div>
+      <span class="badge" style="background: var(--olive-deep); height: fit-content;">{{ order.get_status_display }}</span>
+    </div>
+    {% for item in order.items.all %}
+      <div style="color: var(--cream-dim); font-size:.85rem;">{{ item.quantity }} × {{ item.dish_name }}</div>
+    {% endfor %}
+    <div class="d-flex justify-content-between align-items-center mt-3 pt-2" style="border-top: 1px solid var(--panel-light);">
+      <span class="price-tag">{{ order.total }} ₴</span>
+      <form method="post" action="{% url 'order_reorder' order.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-cream">Замовити знову</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

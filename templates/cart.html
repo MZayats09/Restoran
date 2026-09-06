@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4" style="max-width: 720px;">
+  <h1 class="mb-4">Кошик</h1>
+
+  {% if not cart|length %}
+    <div class="text-center py-5">
+      <p style="color: var(--cream-dim);">Кошик порожній. Час обрати щось смачне.</p>
+      <a href="{% url 'menu' %}" class="btn btn-rust px-4">До меню</a>
+    </div>
+  {% else %}
+    {% for item in cart %}
+    <div class="d-flex align-items-center gap-3 py-3" style="border-bottom: 1px solid var(--panel-light);">
+      <img src="{{ item.dish.photo_url }}" style="width:66px; height:66px; object-fit:cover; border-radius:8px;" alt="{{ item.dish.name }}">
+      <div class="flex-grow-1">
+        <h5 style="color: var(--cream); font-size:1rem; margin-bottom:2px;">{{ item.dish.name }}</h5>
+        <span class="price-tag">{{ item.dish.price }} ₴</span>
+      </div>
+      <div class="d-flex align-items-center gap-2 card-panel px-2 py-1">
+        <form method="post" action="{% url 'cart_update' item.dish.pk %}" class="m-0">
+          {% csrf_token %}<input type="hidden" name="action" value="decrease">
+          <button class="btn btn-sm" style="color: var(--cream); background:none; border:none;">−</button>
+        </form>
+        <span>{{ item.quantity }}</span>
+        <form method="post" action="{% url 'cart_update' item.dish.pk %}" class="m-0">
+          {% csrf_token %}<input type="hidden" name="action" value="increase">
+          <button class="btn btn-sm" style="color: var(--cream); background:none; border:none;">+</button>
+        </form>
+      </div>
+      <form method="post" action="{% url 'cart_remove' item.dish.pk %}">
+        {% csrf_token %}
+        <button class="btn btn-sm" style="color: var(--rust); background:none; border:none;">🗑</button>
+      </form>
+    </div>
+    {% endfor %}
+
+    <div class="d-flex justify-content-between align-items-center mt-4">
+      <span style="color: var(--cream-dim);">Разом</span>
+      <span style="font-size:1.4rem; font-family:'Fraunces', serif;">{{ cart_total }} ₴</span>
+    </div>
+    <a href="{% url 'checkout' %}" class="btn btn-rust w-100 mt-3 py-2">Оформити замовлення</a>
+  {% endif %}
+</div>
+{% endblock %}
