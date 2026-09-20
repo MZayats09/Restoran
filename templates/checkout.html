@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4" style="max-width: 520px;">
+  <h1 class="mb-4">Оформлення замовлення</h1>
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label class="form-label small">Ім’я та прізвище</label>
+      {{ form.name }}
+    </div>
+    <div class="mb-3">
+      <label class="form-label small">Телефон</label>
+      {{ form.phone }}
+    </div>
+    <div class="mb-3">
+      <label class="form-label small">Адреса доставки</label>
+      {{ form.address }}
+    </div>
+    <div class="mb-3">
+      <label class="form-label small d-block">Спосіб оплати</label>
+      {% for radio in form.payment_method %}
+        <div class="form-check form-check-inline">{{ radio.tag }} <label class="form-check-label" style="color: var(--cream-dim);">{{ radio.choice_label }}</label></div>
+      {% endfor %}
+    </div>
+    {% if form.errors %}
+      <div class="alert alert-danger bg-transparent border-danger">Перевір, будь ласка, поля форми.</div>
+    {% endif %}
+    <div class="d-flex justify-content-between align-items-center my-3 pt-3" style="border-top: 1px solid var(--panel-light);">
+      <span style="color: var(--cream-dim);">До сплати</span>
+      <span class="price-tag" style="font-size:1.3rem;">{{ cart_total }} ₴</span>
+    </div>
+    <button type="submit" class="btn btn-rust w-100 py-2">Підтвердити замовлення</button>
+  </form>
+</div>
+{% endblock %}
