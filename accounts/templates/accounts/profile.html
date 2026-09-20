@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Мій профіль{% endblock %}
+{% block content %}
+<h2 class="mb-4">Мій профіль</h2>
+<form method="post" class="col-md-6">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-brand">Зберегти</button>
+</form>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}{{ dish.name }} — Смаковита{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-5">
+        {% if dish.image %}<img src="{{ dish.image.url }}" class="img-fluid rounded shadow-sm">{% endif %}
+    </div>
+    <div class="col-md-7">
+        <h2>{{ dish.name }}</h2>
+        <p class="text-muted">{{ dish.category.name }}</p>
+        <p>{{ dish.description }}</p>
+        {% if dish.ingredients %}<p><strong>Інгредієнти:</strong> {{ dish.ingredients }}</p>{% endif %}
+        {% if dish.average_rating %}<p>⭐ {{ dish.average_rating }} / 5</p>{% endif %}
+        <h3 class="fw-bold">{{ dish.price }} грн</h3>
+
+        {% if dish.is_available %}
+        <form method="post" action="{% url 'cart:cart_add' dish.id %}" class="d-flex gap-2 align-items-center mt-3">
+            {% csrf_token %}
+            <input type="number" name="quantity" value="1" min="1" class="form-control" style="width:90px;">
+            <button type="submit" class="btn btn-brand">Додати в кошик</button>
+        </form>
+        {% else %}
+        <span class="badge bg-secondary">Немає в наявності</span>
+        {% endif %}
+    </div>
+</div>
+
+<hr class="my-5">
+<h4>Відгуки</h4>
+{% if user.is_authenticated %}
+<form method="post" action="{% url 'reviews:add_review' dish.slug %}" class="mb-4 border rounded p-3 bg-white">
+    {% csrf_token %}
+    <div class="row g-2 align-items-center">
+        <div class="col-md-2">
+            <select name="rating" class="form-select" required>
+                {% for i in "12345" %}<option value="{{ i }}">{{ i }} ★</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-md-8">
+            <input type="text" name="text" class="form-control" placeholder="Ваш відгук...">
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-brand w-100" type="submit">Надіслати</button>
+        </div>
+    </div>
+</form>
+{% else %}
+<p><a href="{% url 'accounts:login' %}">Увійдіть</a>, щоб залишити відгук.</p>
+{% endif %}
+
+{% for review in reviews %}
+    {% if review.is_approved or user.profile.is_admin_role or review.user == user %}
+    <div class="border rounded p-3 mb-2 bg-white">
+        <strong>{{ review.user.username }}</strong> — {{ review.rating }} ★
+        {% if not review.is_approved %}<span class="badge bg-secondary">приховано</span>{% endif %}
+        <p class="mb-1">{{ review.text }}</p>
+        <small class="text-muted">{{ review.created_at|date:"d.m.Y H:i" }}</small>
+        {% if user.profile.is_admin_role or review.user == user %}
+        <form method="post" action="{% url 'reviews:delete_review' review.id %}" class="d-inline">
+            {% csrf_token %}
+            <button class="btn btn-sm btn-outline-danger ms-2" type="submit">Видалити</button>
+        </form>
+        {% endif %}
+    </div>
+    {% endif %}
+{% empty %}
+<p class="text-muted">Ще немає відгуків.</p>
+{% endfor %}
+{% endblock %}

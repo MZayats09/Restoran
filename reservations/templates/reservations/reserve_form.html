@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Бронювання столика №{{ table.number }}{% endblock %}
+{% block content %}
+<h2 class="mb-4">Бронювання столика №{{ table.number }} ({{ table.seats }} місць)</h2>
+<form method="post" class="col-md-6">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-brand">Підтвердити бронювання</button>
+    <a href="{% url 'reservations:table_map' %}" class="btn btn-outline-secondary">Скасувати</a>
+</form>
+{% endblock %}

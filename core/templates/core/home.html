@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Головна — Смаковита{% endblock %}
+{% block content %}
+<div class="p-5 mb-4 rounded-3 text-white" style="background: linear-gradient(120deg, #922b21, #c0392b);">
+    <h1 class="display-6 fw-bold">Смачна їжа з доставкою або бронюванням столика</h1>
+    <p class="lead">Перегляньте меню, замовте улюблені страви онлайн або забронюйте столик у нашому залі.</p>
+    <a class="btn btn-light btn-lg me-2" href="{% url 'menu:menu_list' %}">Переглянути меню</a>
+    <a class="btn btn-outline-light btn-lg" href="{% url 'reservations:table_map' %}">Забронювати столик</a>
+</div>
+
+<form method="get" action="{% url 'menu:menu_list' %}" class="mb-5">
+    <div class="input-group">
+        <input type="text" name="q" class="form-control" placeholder="Пошук страви...">
+        <button class="btn btn-brand" type="submit">Пошук</button>
+    </div>
+</form>
+
+{% if popular_dishes %}
+<h3 class="mb-3">🔥 Популярні страви</h3>
+<div class="row row-cols-1 row-cols-md-4 g-4 mb-5">
+    {% for dish in popular_dishes %}
+    <div class="col">
+        <div class="card h-100 card-dish shadow-sm">
+            {% if dish.image %}<img src="{{ dish.image.url }}" class="card-img-top" alt="{{ dish.name }}">{% endif %}
+            <div class="card-body">
+                <h6 class="card-title">{{ dish.name }}</h6>
+                <p class="text-muted small mb-1">{{ dish.category.name }}</p>
+                <p class="fw-bold">{{ dish.price }} грн</p>
+                <a href="{% url 'menu:dish_detail' dish.slug %}" class="btn btn-sm btn-outline-secondary">Детальніше</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if new_dishes %}
+<h3 class="mb-3">🆕 Нові пропозиції</h3>
+<div class="row row-cols-1 row-cols-md-4 g-4">
+    {% for dish in new_dishes %}
+    <div class="col">
+        <div class="card h-100 card-dish shadow-sm">
+            {% if dish.image %}<img src="{{ dish.image.url }}" class="card-img-top" alt="{{ dish.name }}">{% endif %}
+            <div class="card-body">
+                <h6 class="card-title">{{ dish.name }} <span class="badge badge-new">Новинка</span></h6>
+                <p class="text-muted small mb-1">{{ dish.category.name }}</p>
+                <p class="fw-bold">{{ dish.price }} грн</p>
+                <a href="{% url 'menu:dish_detail' dish.slug %}" class="btn btn-sm btn-outline-secondary">Детальніше</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}
