@@ -2,7 +2,7 @@
 {% block content %}
 <div class="container py-4">
   <h1 class="mb-1">Карта залу</h1>
-  <p style="color: var(--cream-dim);" class="mb-4">Обери дату й час — вільні столики зелені, зайняті на цей час — темні.</p>
+  <p style="color: var(--cream-dim);" class="mb-4">Обери дату й час — вільні столики зелені, зайняті на цей час — темні. Клікни на вільний столик, щоб забронювати.</p>
 
   <form method="get" class="d-flex gap-3 flex-wrap align-items-end mb-4">
     <div>
@@ -17,29 +17,59 @@
         {% endfor %}
       </select>
     </div>
-    <div class="d-flex gap-3 pb-2" style="color: var(--cream-dim); font-size:.8rem;">
+    <div class="d-flex gap-3 pb-2 flex-wrap" style="color: var(--cream-dim); font-size:.8rem;">
       <span><span class="legend-dot" style="background: var(--olive);"></span>вільно</span>
       <span><span class="legend-dot" style="background: var(--rust-deep);"></span>заброньовано</span>
       <span><span class="legend-dot" style="background: var(--mustard);"></span>VIP</span>
     </div>
   </form>
 
-  <div class="floor-plan mb-3">
-    <div class="position-absolute top-0 start-50 translate-middle-x mt-2 rounded d-flex align-items-center justify-content-center" style="width:34%; height:34px; background: var(--ink); color: var(--cream-dim); font-size:.7rem;">Бар</div>
-    <div class="position-absolute bottom-0 start-0 m-2" style="color: var(--cream-dim); font-size:.7rem;">Вхід</div>
+  <svg class="floor-plan-svg" viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="1000" height="600" fill="#3E3527"/>
+
+    <!-- windows along the left wall -->
+    <rect x="0" y="0" width="6" height="600" fill="var(--panel-light)"/>
+    {% for y in window_ys %}
+      <rect x="0" y="{{ y }}" width="6" height="40" fill="#5b7a94" opacity=".55"/>
+    {% endfor %}
+
+    <!-- bar counter -->
+    <rect x="350" y="20" width="300" height="46" rx="8" fill="#241F1B"/>
+    <text x="500" y="48" text-anchor="middle" class="floor-zone-label">Бар</text>
+
+    <!-- kitchen -->
+    <rect x="895" y="15" width="95" height="56" rx="8" fill="#241F1B"/>
+    <text x="942" y="48" text-anchor="middle" class="floor-zone-label" style="font-size:11px;">Кухня</text>
+
+    <!-- terrace divider -->
+    <line x1="140" y1="520" x2="860" y2="520" stroke="#3B3428" stroke-width="2" stroke-dasharray="8 8"/>
+    <text x="500" y="545" text-anchor="middle" class="floor-zone-label" style="font-size:11px; opacity:.7;">тераса</text>
+
+    <!-- entrance -->
+    <text x="16" y="586" class="floor-zone-label" style="font-size:11px;">← Вхід</text>
 
     {% for table in tables %}
-      {% if table.booked %}
-        <div class="table-marker booked" style="left: {{ table.pos_x }}%; top: {{ table.pos_y }}%; width: {{ table.marker_size }}px; height: {{ table.marker_size }}px; border-radius: {% if table.seats > 4 %}12px{% else %}999px{% endif %};" title="Столик №{{ table.number }} зайнятий на цей час">
-          <span>{{ table.number }}</span><small>{{ table.seats }} міс.</small>
-        </div>
+      {% if table.seats <= 2 %}
+        <circle class="table-shape {% if table.booked %}booked{% endif %}"
+                cx="{{ table.svg_x }}" cy="{{ table.svg_y }}" r="{{ table.circle_r }}"
+                fill="{% if table.booked %}#8A3A1C{% elif table.is_vip %}#CE9A3E{% else %}#616B45{% endif %}"
+                stroke="{% if table.booked %}#6f2f18{% else %}rgba(255,255,255,.3){% endif %}" stroke-width="2"
+                {% if not table.booked %}data-modal="modal-{{ table.pk }}" onclick="openTableModal(this)"{% endif %}>
+          <title>Столик №{{ table.number }} · {{ table.seats }} місць{% if table.booked %} · зайнятий на цей час{% endif %}</title>
+        </circle>
       {% else %}
-        <div class="table-marker {% if table.is_vip %}vip{% endif %}" style="left: {{ table.pos_x }}%; top: {{ table.pos_y }}%; width: {{ table.marker_size }}px; height: {{ table.marker_size }}px; border-radius: {% if table.seats > 4 %}12px{% else %}999px{% endif %};" data-bs-toggle="modal" data-bs-target="#modal-{{ table.pk }}" title="Столик №{{ table.number }} · {{ table.seats }} місць">
-          <span>{{ table.number }}</span><small>{{ table.seats }} міс.</small>
-        </div>
+        <rect class="table-shape {% if table.booked %}booked{% endif %}"
+              x="{{ table.rect_x }}" y="{{ table.rect_y }}" width="{{ table.svg_size }}" height="{{ table.svg_size }}" rx="14"
+              fill="{% if table.booked %}#8A3A1C{% elif table.is_vip %}#CE9A3E{% else %}#616B45{% endif %}"
+              stroke="{% if table.booked %}#6f2f18{% else %}rgba(255,255,255,.3){% endif %}" stroke-width="2"
+              {% if not table.booked %}data-modal="modal-{{ table.pk }}" onclick="openTableModal(this)"{% endif %}>
+          <title>Столик №{{ table.number }} · {{ table.seats }} місць{% if table.booked %} · зайнятий на цей час{% endif %}</title>
+        </rect>
       {% endif %}
+      <text x="{{ table.svg_x }}" y="{{ table.svg_y|add:-2 }}" text-anchor="middle" class="table-label" style="font-size:16px;">{{ table.number }}</text>
+      <text x="{{ table.svg_x }}" y="{{ table.svg_y|add:14 }}" text-anchor="middle" class="table-sublabel">{{ table.seats }} міс.</text>
     {% endfor %}
-  </div>
+  </svg>
 
   {% if my_bookings %}
   <h3 class="mt-5 mb-3">Мої бронювання</h3>
@@ -100,4 +130,14 @@
 </div>
 {% endif %}
 {% endfor %}
+
+{% block extra_js %}
+<script>
+  function openTableModal(el) {
+    const modalId = el.getAttribute('data-modal');
+    const modalEl = document.getElementById(modalId);
+    if (modalEl) new bootstrap.Modal(modalEl).show();
+  }
+</script>
+{% endblock %}
 {% endblock %}

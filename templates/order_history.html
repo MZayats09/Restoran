@@ -17,7 +17,7 @@
         <strong>Замовлення №{{ order.pk }}</strong>
         <div style="color: var(--cream-dim); font-size:.8rem;">{{ order.created_at|date:"d.m.Y H:i" }} · {{ order.get_payment_method_display }}</div>
       </div>
-      <span class="badge" style="background: var(--olive-deep); height: fit-content;">{{ order.get_status_display }}</span>
+      <span class="badge status-badge status-{{ order.status }}">{{ order.get_status_display }}</span>
     </div>
     {% for item in order.items.all %}
       <div style="color: var(--cream-dim); font-size:.85rem;">{{ item.quantity }} × {{ item.dish_name }}</div>

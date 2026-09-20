@@ -117,3 +117,20 @@ a:hover { color: var(--cream); }
 .table-marker small { font-size: .6rem; opacity: .85; font-weight: 500; }
 
 .legend-dot { width: 10px; height: 10px; border-radius: 999px; display: inline-block; margin-right: 6px; }
+
+/* Order status badges */
+.status-badge { font-weight: 600; padding: 5px 12px; }
+.status-new { background: var(--panel-light); color: var(--cream); }
+.status-confirmed { background: var(--mustard); color: var(--ink); }
+.status-ready { background: var(--rust); color: var(--white); }
+.status-done { background: var(--olive-deep); color: var(--cream); }
+
+/* SVG restaurant floor plan */
+.floor-plan-svg { width: 100%; height: auto; display: block; background: #3E3527; border-radius: 16px; border: 1px solid var(--panel-light); }
+.table-shape { cursor: pointer; transition: transform .12s ease; transform-box: fill-box; transform-origin: center; }
+.table-shape:hover { transform: scale(1.06); }
+.table-shape.booked { cursor: not-allowed; }
+.table-shape.booked:hover { transform: none; }
+.table-label { font-family: 'Inter', sans-serif; font-weight: 700; fill: var(--white); pointer-events: none; }
+.table-sublabel { font-family: 'Inter', sans-serif; font-size: 11px; fill: rgba(255,255,255,.8); pointer-events: none; }
+.floor-zone-label { font-family: 'Inter', sans-serif; font-size: 13px; fill: var(--cream-dim); }
