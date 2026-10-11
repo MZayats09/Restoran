@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="hero py-5 mb-5">
+  <div class="container">
+    <div class="row align-items-center gy-4">
+      <div class="col-lg-6">
+        <p style="color: var(--mustard); font-size:.9rem;">Домашня українська кухня в центрі міста</p>
+        <h1 style="font-size: 2.6rem; line-height:1.15;">Стіл завжди накритий,<br>лишається обрати свій.</h1>
+        <p style="color: var(--cream-dim); max-width: 440px;">Замовляй улюблені страви онлайн або обери столик просто на карті залу — вікно, тераса чи затишний куточок для двох.</p>
+        <div class="d-flex gap-3 mt-4">
+          <a href="{% url 'menu' %}" class="btn btn-rust px-4 py-2">Переглянути меню</a>
+          <a href="{% url 'booking_map' %}" class="btn btn-outline-cream px-4 py-2">📍 Забронювати столик</a>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card-panel p-3">
+          <p style="color: var(--cream-dim); font-size:.8rem;" class="mb-2">Карта залу</p>
+          <div class="row g-2">
+            {% for n in "12345678" %}
+            <div class="col-3">
+              <div class="d-flex align-items-center justify-content-center rounded-circle" style="aspect-ratio:1; background: var(--olive-deep); color: var(--cream); font-weight:600;">{{ n }}</div>
+            </div>
+            {% endfor %}
+          </div>
+          <a href="{% url 'booking_map' %}" style="color: var(--mustard); font-size:.85rem;" class="d-block mt-3">Натисни, щоб відкрити повну карту →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="container">
+  <form method="get" action="{% url 'menu' %}" class="mx-auto mb-5" style="max-width: 420px;">
+    <input type="text" name="q" class="form-control" placeholder="Пошук по меню...">
+  </form>
+
+  <h2 class="mb-4">Популярне цього тижня</h2>
+  <div class="row g-4 mb-5">
+    {% for dish in popular %}
+    <div class="col-sm-6 col-lg-3">
+      <a href="{% url 'dish_detail' dish.pk %}" class="text-decoration-none">
+        <div class="card-panel h-100 overflow-hidden">
+          <img src="{{ dish.photo_url }}" class="w-100" style="height:130px; object-fit:cover;" alt="{{ dish.name }}">
+          <div class="p-3">
+            <h5 style="color: var(--cream); font-size:1rem;">{{ dish.name }}</h5>
+            {% if dish.average_rating %}<span style="color: var(--mustard); font-size:.85rem;">★ {{ dish.average_rating }}</span>{% endif %}
+            <p class="price-tag mt-2 mb-0">{{ dish.price }} ₴</p>
+          </div>
+        </div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
