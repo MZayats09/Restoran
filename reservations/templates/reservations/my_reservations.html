@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% block title %}Мої бронювання{% endblock %}
+{% block content %}
+<h2 class="mb-4">Мої бронювання</h2>
+<table class="table bg-white">
+    <thead><tr><th>Столик</th><th>Дата</th><th>Час</th><th>Гостей</th><th>Статус</th><th></th></tr></thead>
+    <tbody>
+    {% for r in reservations %}
+    <tr>
+        <td>№{{ r.table.number }}</td>
+        <td>{{ r.date|date:"d.m.Y" }}</td>
+        <td>{{ r.time_slot }}</td>
+        <td>{{ r.guests }}</td>
+        <td>
+            {% if r.status == 'confirmed' %}<span class="badge bg-success">Підтверджено</span>
+            {% else %}<span class="badge bg-secondary">Скасовано</span>{% endif %}
+        </td>
+        <td>
+            {% if r.status == 'confirmed' %}
+            <form method="post" action="{% url 'reservations:cancel_reservation' r.id %}">
+                {% csrf_token %}
+                <button class="btn btn-sm btn-outline-danger" type="submit">Скасувати</button>
+            </form>
+            {% endif %}
+        </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="6" class="text-muted">У вас ще немає бронювань. <a href="{% url 'reservations:table_map' %}">Забронювати столик</a></td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

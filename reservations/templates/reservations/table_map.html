@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Бронювання столика — Смаковита{% endblock %}
+{% block content %}
+<h2 class="mb-4">Бронювання столика</h2>
+
+<form method="get" class="row g-2 mb-4 align-items-end">
+    <div class="col-md-3">
+        <label class="form-label">Дата</label>
+        <input type="date" name="date" value="{{ date|date:'Y-m-d' }}" class="form-control" onchange="this.form.submit()">
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Час</label>
+        <select name="time" class="form-select" onchange="this.form.submit()">
+            {% for value, label in time_slots %}
+            <option value="{{ value }}" {% if value == time_slot %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <span class="legend-dot" style="background:#fff;"></span> вільний столик<br>
+        <span class="legend-dot" style="background:#e74c3c;"></span> зайнятий столик
+    </div>
+</form>
+
+<p class="text-muted">Показано доступність на <strong>{{ date|date:"d.m.Y" }}</strong> о <strong>{{ time_slot }}</strong>. Натисніть на вільний (білий) столик, щоб забронювати його.</p>
+
+<div class="hall-map">
+    {% for table in tables %}
+        {% if table.occupied %}
+        <div class="table-spot occupied" title="Столик №{{ table.number }} — зайнятий" style="left:{{ table.pos_x }}%; top:{{ table.pos_y }}%;">
+            №{{ table.number }}<small>{{ table.seats }} місць</small>
+        </div>
+        {% else %}
+        <a class="table-spot" href="{% url 'reservations:reserve_table' table.id %}?date={{ date|date:'Y-m-d' }}&time={{ time_slot }}"
+           title="Столик №{{ table.number }} — вільний, натисніть щоб забронювати" style="left:{{ table.pos_x }}%; top:{{ table.pos_y }}%;">
+            №{{ table.number }}<small>{{ table.seats }} місць</small>
+        </a>
+        {% endif %}
+    {% empty %}
+        <p class="text-muted p-4">Столики ще не додані. Адміністратор може додати їх у адмін-панелі.</p>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Кошик — Смаковита{% endblock %}
+{% block content %}
+<h2 class="mb-4">Кошик</h2>
+{% if cart %}
+<table class="table bg-white align-middle">
+    <thead><tr><th>Страва</th><th>Ціна</th><th>Кількість</th><th>Сума</th><th></th></tr></thead>
+    <tbody>
+    {% for item in cart %}
+        <tr>
+            <td>{{ item.dish.name }}</td>
+            <td>{{ item.price }} грн</td>
+            <td>
+                <form method="post" action="{% url 'cart:cart_update' item.dish.id %}" class="d-flex gap-1">
+                    {% csrf_token %}
+                    <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control form-control-sm" style="width:70px;">
+                    <button class="btn btn-sm btn-outline-secondary" type="submit">Оновити</button>
+                </form>
+            </td>
+            <td>{{ item.total_price }} грн</td>
+            <td>
+                <form method="post" action="{% url 'cart:cart_remove' item.dish.id %}">
+                    {% csrf_token %}
+                    <button class="btn btn-sm btn-outline-danger" type="submit">Видалити</button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+<div class="text-end">
+    <h4>Разом: {{ cart.get_total_price }} грн</h4>
+    <a href="{% url 'orders:order_create' %}" class="btn btn-brand btn-lg">Оформити замовлення</a>
+</div>
+{% else %}
+<p class="text-muted">Кошик порожній. <a href="{% url 'menu:menu_list' %}">Перейти до меню</a></p>
+{% endif %}
+{% endblock %}

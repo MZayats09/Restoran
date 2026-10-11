@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% block title %}Мої замовлення{% endblock %}
+{% block content %}
+<h2 class="mb-4">Історія замовлень</h2>
+{% for order in orders %}
+<div class="card mb-3 bg-white">
+    <div class="card-body">
+        <div class="d-flex justify-content-between">
+            <h5>Замовлення №{{ order.id }} від {{ order.created_at|date:"d.m.Y H:i" }}</h5>
+            <span class="badge bg-info text-dark align-self-start">{{ order.get_status_display }}</span>
+        </div>
+        <ul class="mb-2">
+        {% for item in order.items.all %}
+            <li>{{ item.dish.name }} x {{ item.quantity }}</li>
+        {% endfor %}
+        </ul>
+        <strong>{{ order.get_total_cost }} грн</strong>
+        <div class="mt-2">
+            <a href="{% url 'orders:order_detail' order.id %}" class="btn btn-sm btn-outline-secondary">Деталі</a>
+            <form action="{% url 'orders:order_repeat' order.id %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button class="btn btn-sm btn-brand" type="submit">Замовити знову</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% empty %}
+<p class="text-muted">У вас ще немає замовлень.</p>
+{% endfor %}
+{% endblock %}
