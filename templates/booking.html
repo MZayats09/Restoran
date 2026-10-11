@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+  <h1 class="mb-1">Карта залу</h1>
+  <p style="color: var(--cream-dim);" class="mb-4">Обери дату й час — вільні столики зелені, зайняті на цей час — темні. Клікни на вільний столик, щоб забронювати.</p>
+
+  <form method="get" class="d-flex gap-3 flex-wrap align-items-end mb-4">
+    <div>
+      <label class="form-label small">Дата</label>
+      <input type="date" name="date" value="{{ selected_date }}" min="{{ today }}" class="form-control" style="width:170px;" onchange="this.form.submit()">
+    </div>
+    <div>
+      <label class="form-label small">Час</label>
+      <select name="time" class="form-select" style="width:130px;" onchange="this.form.submit()">
+        {% for t in time_slots %}
+          <option value="{{ t }}" {% if t == selected_time %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="d-flex gap-3 pb-2 flex-wrap" style="color: var(--cream-dim); font-size:.8rem;">
+      <span><span class="legend-dot" style="background: var(--olive);"></span>вільно</span>
+      <span><span class="legend-dot" style="background: var(--rust-deep);"></span>заброньовано</span>
+      <span><span class="legend-dot" style="background: var(--mustard);"></span>VIP</span>
+    </div>
+  </form>
+
+  <svg class="floor-plan-svg" viewBox="0 0 1000 600" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="1000" height="600" fill="#3E3527"/>
+
+    <!-- windows along the left wall -->
+    <rect x="0" y="0" width="6" height="600" fill="var(--panel-light)"/>
+    {% for y in window_ys %}
+      <rect x="0" y="{{ y }}" width="6" height="40" fill="#5b7a94" opacity=".55"/>
+    {% endfor %}
+
+    <!-- bar counter -->
+    <rect x="350" y="20" width="300" height="46" rx="8" fill="#241F1B"/>
+    <text x="500" y="48" text-anchor="middle" class="floor-zone-label">Бар</text>
+
+    <!-- kitchen -->
+    <rect x="895" y="15" width="95" height="56" rx="8" fill="#241F1B"/>
+    <text x="942" y="48" text-anchor="middle" class="floor-zone-label" style="font-size:11px;">Кухня</text>
+
+    <!-- terrace divider -->
+    <line x1="140" y1="520" x2="860" y2="520" stroke="#3B3428" stroke-width="2" stroke-dasharray="8 8"/>
+    <text x="500" y="545" text-anchor="middle" class="floor-zone-label" style="font-size:11px; opacity:.7;">тераса</text>
+
+    <!-- entrance -->
+    <text x="16" y="586" class="floor-zone-label" style="font-size:11px;">← Вхід</text>
+
+    {% for table in tables %}
+      {% if table.seats <= 2 %}
+        <circle class="table-shape {% if table.booked %}booked{% endif %}"
+                cx="{{ table.svg_x }}" cy="{{ table.svg_y }}" r="{{ table.circle_r }}"
+                fill="{% if table.booked %}#8A3A1C{% elif table.is_vip %}#CE9A3E{% else %}#616B45{% endif %}"
+                stroke="{% if table.booked %}#6f2f18{% else %}rgba(255,255,255,.3){% endif %}" stroke-width="2"
+                {% if not table.booked %}data-modal="modal-{{ table.pk }}" onclick="openTableModal(this)"{% endif %}>
+          <title>Столик №{{ table.number }} · {{ table.seats }} місць{% if table.booked %} · зайнятий на цей час{% endif %}</title>
+        </circle>
+      {% else %}
+        <rect class="table-shape {% if table.booked %}booked{% endif %}"
+              x="{{ table.rect_x }}" y="{{ table.rect_y }}" width="{{ table.svg_size }}" height="{{ table.svg_size }}" rx="14"
+              fill="{% if table.booked %}#8A3A1C{% elif table.is_vip %}#CE9A3E{% else %}#616B45{% endif %}"
+              stroke="{% if table.booked %}#6f2f18{% else %}rgba(255,255,255,.3){% endif %}" stroke-width="2"
+              {% if not table.booked %}data-modal="modal-{{ table.pk }}" onclick="openTableModal(this)"{% endif %}>
+          <title>Столик №{{ table.number }} · {{ table.seats }} місць{% if table.booked %} · зайнятий на цей час{% endif %}</title>
+        </rect>
+      {% endif %}
+      <text x="{{ table.svg_x }}" y="{{ table.svg_y|add:-2 }}" text-anchor="middle" class="table-label" style="font-size:16px;">{{ table.number }}</text>
+      <text x="{{ table.svg_x }}" y="{{ table.svg_y|add:14 }}" text-anchor="middle" class="table-sublabel">{{ table.seats }} міс.</text>
+    {% endfor %}
+  </svg>
+
+  {% if my_bookings %}
+  <h3 class="mt-5 mb-3">Мої бронювання</h3>
+  {% for b in my_bookings %}
+    <div class="card-panel p-3 mb-2 d-flex flex-row justify-content-between align-items-center">
+      <div style="font-size:.9rem;">
+        Столик №{{ b.table.number }} · {{ b.date }} о {{ b.time|time:"H:i" }} · {{ b.guests }} гостей
+        <div style="color: var(--cream-dim); font-size:.8rem;">{{ b.name }}, {{ b.phone }}</div>
+      </div>
+      <form method="post" action="{% url 'booking_cancel' b.pk %}">
+        {% csrf_token %}
+        <button class="btn btn-sm" style="color: var(--rust); background:none; border:none;">🗑</button>
+      </form>
+    </div>
+  {% endfor %}
+  {% endif %}
+</div>
+
+<!-- Booking modals -->
+{% for table in tables %}
+{% if not table.booked %}
+<div class="modal fade" id="modal-{{ table.pk }}" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background: var(--panel); color: var(--cream);">
+      <div class="modal-header" style="border-color: var(--panel-light);">
+        <h5 class="modal-title">Столик №{{ table.number }}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="{% url 'booking_create' table.pk %}">
+        {% csrf_token %}
+        <div class="modal-body">
+          <p style="color: var(--cream-dim); font-size:.85rem;">До {{ table.seats }} гостей {% if table.is_vip %}· VIP-зона{% endif %}{% if table.is_terrace %}· тераса{% endif %}</p>
+          <div class="row g-2 mb-2">
+            <div class="col-6">
+              <label class="form-label small">Дата</label>
+              <input type="date" name="date" value="{{ selected_date }}" min="{{ today }}" class="form-control" required>
+            </div>
+            <div class="col-6">
+              <label class="form-label small">Час</label>
+              <select name="time" class="form-select" required>
+                {% for t in time_slots %}<option value="{{ t }}" {% if t == selected_time %}selected{% endif %}>{{ t }}</option>{% endfor %}
+              </select>
+            </div>
+          </div>
+          <label class="form-label small">Кількість гостей (макс. {{ table.seats }})</label>
+          <input type="number" name="guests" min="1" max="{{ table.seats }}" value="2" class="form-control mb-2" required>
+          <label class="form-label small">Ім’я</label>
+          <input type="text" name="name" value="{{ user.username|default:'' }}" class="form-control mb-2" required>
+          <label class="form-label small">Телефон</label>
+          <input type="text" name="phone" placeholder="+380..." class="form-control" required>
+        </div>
+        <div class="modal-footer" style="border-color: var(--panel-light);">
+          <button type="submit" class="btn btn-rust w-100">Забронювати столик</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endfor %}
+
+{% block extra_js %}
+<script>
+  function openTableModal(el) {
+    const modalId = el.getAttribute('data-modal');
+    const modalEl = document.getElementById(modalId);
+    if (modalEl) new bootstrap.Modal(modalEl).show();
+  }
+</script>
+{% endblock %}
+{% endblock %}
