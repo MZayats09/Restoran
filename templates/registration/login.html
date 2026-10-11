@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-5" style="max-width: 380px;">
+  <h1 class="mb-4">Вхід</h1>
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label class="form-label small">Ім’я користувача</label>
+      {{ form.username }}
+    </div>
+    <div class="mb-3">
+      <label class="form-label small">Пароль</label>
+      {{ form.password }}
+    </div>
+    {% if form.errors %}
+      <div class="alert alert-danger bg-transparent border-danger">Неправильний логін або пароль.</div>
+    {% endif %}
+    <button type="submit" class="btn btn-rust w-100 py-2">Увійти</button>
+  </form>
+  <p class="mt-3" style="color: var(--cream-dim); font-size:.9rem;">
+    Немає акаунта? <a href="{% url 'register' %}">Зареєструватися</a>
+  </p>
+  <p style="color: var(--cream-dim); font-size:.8rem;">Тестовий доступ: guest / guest12345 (створюється командою seed_data). Адмінський доступ — через свій суперюзер.</p>
+</div>
+{% endblock %}
